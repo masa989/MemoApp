@@ -1,16 +1,20 @@
 import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, Text, View } from 'react-native'
-import { JsxElement } from 'typescript'
+import { JSX } from 'react/jsx-runtime'
+import Hello from './src/components/Hello'
+
 //ESLintを有効にするとJSXでエラーが表示されるため、対策でReactを宣言する
 // import React from 'react';
 
-const App = (): JsxElement => {
+const App = (): JSX.Element => {
 
   return (
     <View style={styles.container}>
+      <Hello bang>World</Hello>
+      <Hello style={{ fontSize: 16 }}>World</Hello>
       <Text>Open up App.tsx to start working on your app!!!</Text>
       <StatusBar style="auto" />
-    </View>
+    </View >
   )
 }
 
