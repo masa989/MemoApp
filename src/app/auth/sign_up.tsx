@@ -1,27 +1,59 @@
 import { View, Text, TextInput, Alert, TouchableOpacity, StyleSheet } from 'react-native'
 import { JSX } from 'react/jsx-runtime'
 import { Link, router } from 'expo-router'
+import { useState } from 'react'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 
-import Header from '../../components/Header'
+import { auth } from '../../config'
 import Button from '../../components/Button'
 
-const handlePress = (): void => {
+const handlePress = (email: string, password: string): void => {
   //会員登録
-  router.push('/memo/list')
+  console.log(email, password)
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((useCredential) => {
+      console.log(useCredential.user.uid)
+      router.replace('/memo/list')
+    })
+    .catch((error) => {
+      const { code, message } = error
+      console.log(code, message)
+      Alert.alert(message)
+    })
+
 }
 
 const SignUp = (): JSX.Element => {
+  //const {name} = props これと同じようにuseStateが実行された返り値からemailを取り出す
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
   return (
     <View style={styles.container}>
-      <Header />
       <View style={styles.inner}>
         <Text style={styles.title}>新規登録</Text>
-        <TextInput style={styles.input} value='メールアドレス' />
-        <TextInput style={styles.input} value='パスワード' />
-        <Button label='登録' onPress={handlePress} />
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={(text) => { setEmail(text) }}
+          autoCapitalize='none'
+          keyboardType='email-address'
+          placeholder='メールアドレス'
+          textContentType='emailAddress'
+        />
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={(text) => { setPassword(text) }}
+          autoCapitalize='none'
+          secureTextEntry={true}
+          placeholder='パスワード'
+          textContentType='password'
+        />
+        <Button label='登録' onPress={() => { handlePress(email, password) }} />
         <View style={styles.footer}>
           <Text style={styles.footerText}>会員の方はこちら</Text>
-          <Link href='/auth/log_in' asChild={true}>
+          <Link href='/auth/log_in' asChild={true} replace={true}>
             <TouchableOpacity>
               <Text style={styles.footerLink}>ログイン</Text>
             </TouchableOpacity>
