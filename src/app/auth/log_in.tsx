@@ -2,10 +2,21 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'reac
 import { JSX } from 'react/jsx-runtime'
 import { Link, router } from 'expo-router'
 import { useState } from 'react'
-import { signInWithEmailAndPassword } from '@firebase/auth'
+import { signInWithEmailAndPassword, signInAnonymously } from '@firebase/auth'
 
 import Button from '../../components/Button'
 import { auth } from '../../config'
+
+const handlePressSigninAnonymously = (): void => {
+  signInAnonymously(auth)
+    .then(() => {
+      router.replace('/memo/list')
+    })
+    .catch((error) => {
+      const errorMessage = error.message
+      console.log(errorMessage)
+    })
+}
 
 const handlePress = (email: string, password: string): void => {
   //会員登録
@@ -59,6 +70,15 @@ const LogIn = (): JSX.Element => {
             </TouchableOpacity>
           </Link>
         </View>
+
+        <View style={styles.footer}>
+          <TouchableOpacity onPress={() => {
+            handlePressSigninAnonymously()
+          }}>
+            <Text style={styles.footerLinkGuestText}>ゲストユーザーで使用する</Text>
+          </TouchableOpacity>
+        </View>
+
       </View>
     </View>
   )
@@ -91,8 +111,8 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    flexDirection: 'row'
-
+    flexDirection: 'row',
+    height: 32
   },
   footerText: {
     fontSize: 14,
@@ -100,6 +120,11 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   footerLink: {
+    fontSize: 14,
+    lineHeight: 24,
+    color: '#467fd3'
+  },
+  footerLinkGuestText: {
     fontSize: 14,
     lineHeight: 24,
     color: '#467fd3'
