@@ -1,20 +1,56 @@
-import { View, TextInput, StyleSheet, KeyboardAvoidingView } from 'react-native'
+// import { View, TextInput, StyleSheet, KeyboardAvoidingView } from 'react-native'
+import { View, TextInput, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
+import { collection, addDoc, Timestamp } from 'firebase/firestore'
+import { useState } from 'react'
 
 import CircleButton from '../../components/CircleButton'
 import Icon from '../../components/Icon'
+import { db, auth } from '../../config'
+import KeyboardAvoidingView from '../../components/KeyboardAvoidingView'
 
-const handlePress = (): void => {
-  router.back()
+const handlePress = (bodyText: string): void => {
+  if (auth.currentUser === null) { return }
+  //コレクション指定
+  const ref = collection(db, `users/${auth.currentUser.uid}/memos`)
+
+  addDoc(ref, {
+    bodyText: bodyText,
+    updatedAt: Timestamp.fromDate(new Date())
+  })
+    .then((docRef) => {
+      console.log('success', docRef.id)
+      router.back()
+    })
+    .catch((error) => {
+      console.log(error)
+    })
+
+  // await addDoc(collection(db, 'memos'), {
+  //   bodyText: 'test 2'
+  // })
+  //   .catch((error) => {
+  //     console.log(error)
+  //   })
+  // router.back()
 }
 
 const Create = () => {
+  const [bodyText, setBodyText] = useState('')
+
   return (
-    <KeyboardAvoidingView behavior='height' style={styles.container}>
+    // <KeyboardAvoidingView behavior='height' style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
       <View style={styles.inputContainer}>
-        <TextInput multiline style={styles.input} value='' />
+        <TextInput
+          multiline
+          style={styles.input}
+          value={bodyText}
+          onChangeText={(text) => { setBodyText(text) }}
+          autoFocus={true}
+        />
       </View>
-      <CircleButton onPress={handlePress}>
+      <CircleButton onPress={() => handlePress(bodyText)}>
         <Icon name='check' size={40} color='#ffffff' />
       </CircleButton>
     </KeyboardAvoidingView>

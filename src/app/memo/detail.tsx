@@ -1,32 +1,60 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native'
 import { JSX } from 'react/jsx-runtime'
+import { onSnapshot, doc } from 'firebase/firestore'
+import { useState, useEffect } from 'react'
+
 import Icon from '../../components/Icon'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
+import { auth, db } from '../../config'
+import { type Memo } from '../../../types/memo'
 
 import CircleButton from '../../components/CircleButton'
 
-const handlePress = (): void => {
-  router.push('/memo/edit')
+const handlePress = (id: string): void => {
+  router.push({ pathname: '/memo/edit', params: { id: id } })
 }
 
 const Detail = (): JSX.Element => {
+  const id = String(useLocalSearchParams().id)
+  const [memo, setMemo] = useState<Memo | null>(null)
+  useEffect(() => {
+    if (auth.currentUser === null) {
+      return
+    }
+    //ドキュメントを取得
+    const ref = doc(db, `users/${auth.currentUser.uid}/memos`, id)
+    const unsubscribe = onSnapshot(ref, (memoDoc) => {
+      console.log(memoDoc.data())
+      //as は TypeScript の 型アサーション（type assertion） で、「この値は Memo 型として扱ってください」とコンパイラに伝える書き方です。
+      const { bodyText, updatedAt } = memoDoc.data() as Memo
+      setMemo({
+        id: memoDoc.id,
+        bodyText: bodyText,
+        updatedAt: updatedAt
+      })
+    })
+    return unsubscribe
+  }, [])
+  console.log(id)
   return (
     <View style={styles.container}>
       <View style={styles.memoHeader}>
-        <Text style={styles.memoTitle}>買い物リスト</Text>
-        <Text style={styles.memoDate}>2026年11月1日 10:30</Text>
+        <Text
+          style={styles.memoTitle}
+          numberOfLines={1}
+        >{memo?.bodyText}</Text>
+        <Text style={styles.memoDate}>{memo?.updatedAt?.toDate().toLocaleString('ja-JP')}</Text>
       </View>
       <ScrollView style={styles.memoBody}>
         <Text style={styles.memoBodyText}>
-          買い物リスト
-          書体やレイアウトなどを確認するために、長文を表示しています。
+          {memo?.bodyText}
         </Text>
       </ScrollView>
 
       <CircleButton style={{
         top: 60,
         bottom: 'auto'
-      }} onPress={handlePress}>
+      }} onPress={() => { handlePress(id) }}>
         <Icon name='pencil' size={40} color='#ffffff' />
       </CircleButton>
     </View>
@@ -57,10 +85,10 @@ const styles = StyleSheet.create({
     lineHeight: 16
   },
   memoBody: {
-    paddingVertical: 32,
     paddingHorizontal: 27
   },
   memoBodyText: {
+    paddingVertical: 32,
     fontSize: 16,
     lineHeight: 24,
     color: '#000000'
